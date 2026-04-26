@@ -1,0 +1,195 @@
+import React from "react";
+import { AnimatePresence, motion } from "motion/react";
+import LoginModal from "../components/LoginModal";
+import { useSelector, useDispatch } from "react-redux";
+import useGetCurrentUser from "../hooks/useGetCurrentUser";
+import { Coins } from "lucide-react";
+import axios from 'axios';
+import { serverUrl } from '../App';
+import { setUserData } from '../redux/userSlice';
+import { useNavigate } from "react-router-dom";
+const Home = () => {
+  const highlights = [
+    "AI Generated Code",
+    "Fully Responsive Design",
+    "Production ready output",
+  ];
+
+  const [openLogin, setOpenLogin] = React.useState(false);
+  const { userData } = useSelector((state) => state.user);
+  const [openProfile, setOpenProfile] = React.useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const handleLogout =async () => {
+    // Implement logout logic here
+    try{
+       await axios.post(`${serverUrl}/api/auth/logout`,{},{withCredentials:true});
+       // Optionally, you can also clear the user data from the Redux store here
+       dispatch(setUserData(null));
+       setOpenProfile(false);
+    }catch(error){
+
+    }
+  }
+  return (
+    <div className="relative min-h-screen bg-[#040404] text-white overflow-hidden">
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop:blur-xl bg-black/40
+        border-b border-white/10"
+      >
+        <div
+          className="max-w-7xl mx-auto px-6 py-4
+        flex justify-between items-center"
+        >
+          <div className="text-lg font-semibold">GenWeb.ai</div>
+
+          <div className="flex items-center gap-5">
+            <div
+              className="hidden md:inline text-sm text-zinc-400
+                  hover:text-white cursor-pointer"
+            >
+              Pricing
+            </div>
+
+            {userData && (
+              <div
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full
+                bg-white/5 border border-white/10 text-sm cursor-pointer hover:bg-white/10
+                transition"
+              >
+                <Coins size={14} className="text-yellow-400" />
+                <span>{userData.credits || 0}</span>
+                <span className="font-semibold"></span>
+              </div>
+            )}
+
+            {!userData ? (
+              <button
+                className="px-4 py-2 rounded-lg border border-white/20
+                 hover:bg-white/10 text-sm"
+                onClick={() => setOpenLogin(true)}
+              >
+                Get Started
+              </button>
+            ) : (
+              <div className="relative">
+                <button
+                  className="px-4 py-2 rounded-lg border border-white/20
+                    hover:bg-white/10 text-sm"
+                  onClick={() => setOpenProfile(!openProfile)}
+                >
+                  <img
+                    src={
+                      userData.avatar ||
+                      `https://ui-avatars.com/api/?name=${userData.name}`
+                    }
+                    alt=""
+                    className="w-9 h-9 rounded-full border border-white/20 object-cover"
+                  />
+                </button>
+                <AnimatePresence>
+                  {openProfile && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, y: -20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                      className="absolute right-0 mt-3 w-60 z-50 rounded-xl
+                                 bg-black/50 border border-white/10 shadow-2xl overflow-hidden"
+                    >
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-sm font-medium truncate">
+                          Welcome, {userData.name}!
+                        </p>
+                        <p className="text-xs text-zinc-400 truncate">
+                          {userData.email}
+                        </p>
+                      </div>
+
+                      <button className="md:hidden w-full px-4 py-3 flex items-center
+                      gap-2 text-sm border-b border-white/10 hover:bg-white/5">
+                        <Coins size={14} className="text-yellow-400" />
+                        <span>{userData.credits || 0}</span>
+                        <span className="font-semibold"></span>
+                      </button>
+
+                      <button className="w-ful px-4 py-3 text-left text-sm
+                      hover:bg-white/5" onClick={() => navigate('/dashboard')}>
+                        Dashboard
+                      </button>
+                      <button className="w-full px-4 py-3 text-left text-sm
+                        text-red-400 hover:bg-white/5" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      <section className="pt-44 pb-32 px-6 text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-5xl md:text-7xl font-bold tracking-tight"
+        >
+          Build Your Website <br />
+          <span
+            className="bg-linear-to-r from-purple-400 to-blue-400
+                    bg-clip-text text-transparent"
+          >
+            with AI
+          </span>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8 max-w-2xl mx-auto text-zinc-400"
+        >
+          Create stunning websites effortlessly with GenWeb.ai. Our AI-powered
+          platform transforms your ideas into beautiful, responsive websites in
+          minutes.
+        </motion.p>
+
+        <button
+          className="px-10 py-4 rounded-xl bg-white
+            text-black font-semibold hover:scale-105 transition mt-12"
+          onClick={() => navigate('/dashboard')}
+        >{userData ? "Go to Dashboard" : "Get Started"}
+        </button>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-6 pb-32">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {highlights.map((h, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              className="rounded-2xl bg-white/5 border border-white/10 p-8"
+            >
+              <h1 className="text-xl font-semibold mb-3">{h}</h1>
+              <p className="text-sm text-zinc-400">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                Voluptas, eaque. Doloribus, voluptate. Molestias, voluptate.
+                Molestias, voluptate. Molestias,
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t border-white/10 py-10 text-center text-sm text-zinc-400">
+        &copy; {new Date().getFullYear()} GenWeb.ai. All rights reserved.
+      </footer>
+      {openLogin && <LoginModal open={openLogin} setOpen={setOpenLogin} />}
+    </div>
+  );
+};
+
+export default Home;
