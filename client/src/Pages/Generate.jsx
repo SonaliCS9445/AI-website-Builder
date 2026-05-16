@@ -2,9 +2,22 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import {useState} from 'react';
+import axios from "axios";
+import { serverUrl } from "../App";
 
 function Generate() {
   const navigate = useNavigate();
+  const [prompt, setPrompt] = useState("");
+  const handleGenerateWebsite=async()=>{
+    try {
+      const result = await axios.post(`${serverUrl}/api/website/generate`,{prompt},
+      {withCredentials:true});
+      console.log(result);
+    }catch (error) {
+      console.error("Failed to generate website", error);
+    }
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0b0b0b] to-[#1a1a1a] text-white">
       <div className="sticky top-0 z-40 backdrop-blur-xl bg-black/50 border-b border-white/10">
@@ -47,6 +60,9 @@ function Generate() {
           <h1 className="text-xl font-semibold mb-2">Describe your idea</h1>
           <div className="relative">
             <textarea
+      
+              onChange={(e) => setPrompt(e.target.value)}
+               value={prompt}
               name=""
               id=""
               placeholder="Describe your website idea..."
@@ -60,7 +76,7 @@ function Generate() {
                 whileHover={{scale:1.05}}
                 whileTap={{scale:0.95}}
                 className='px-14 py-4 rounded-xl font-semibold text-lg bg-white text-black '
-                onClick={() => alert('Website generation feature coming soon!')}
+                onClick={handleGenerateWebsite}
             >
                 Generate Website
             </motion.button>

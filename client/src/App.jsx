@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 import Dashboard from './Pages/Dashboard';
 import Generate from './Pages/Generate';
+import Editor from './Pages/Editor';
 
 const App = () => {
   useGetCurrentUser();
@@ -18,7 +19,7 @@ const App = () => {
         <Route path='/' element={<Home />} />
         <Route path='/dashboard' element={userData ? <Dashboard /> : <Home />} />
         <Route path='/generate' element={userData ? <Generate /> : <Home />} />
-
+        <Route path='/editor/:id' element={userData ? <Editor /> : <Home />} />
       </Routes>
 </BrowserRouter>  )
 }
