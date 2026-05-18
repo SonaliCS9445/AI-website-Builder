@@ -190,14 +190,15 @@ export const generateWebsite = async (req, res) => {
       title: prompt.substring(0,50),
       latestCode: parsed.code,
       conversation:[
+         {
+          role:"user",
+          content:prompt
+        },
         {
           role:"ai",
           content:parsed.message
-        },
-        {
-          role:"user",
-          content:prompt
         }
+       
       ]
     });
 

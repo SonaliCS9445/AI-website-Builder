@@ -1,23 +1,88 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
+import { easeIn, motion } from "motion/react";
 import {useState} from 'react';
 import axios from "axios";
 import { serverUrl } from "../App";
+import { set } from "mongoose";
+import { useEffect } from "react";
+const PHASES = [
+  "Analyzing your ideas....",
+  "Creating the structure of your website....",
+  "Designing the layout and user interface....",
+  "Adding content and features....",
+  "Finalizing and optimizing your website....",
+]
 
 function Generate() {
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
+  const [loading,setLoading] = useState(false)
+  const [progress,setProgress] = useState(0);
+  const [phaseIndex,setPhaseIndex] = useState(0);
+  const [error,setError] = useState("");
   const handleGenerateWebsite=async()=>{
+    setLoading(true);
     try {
       const result = await axios.post(`${serverUrl}/api/website/generate`,{prompt},
       {withCredentials:true});
-      console.log(result);
+      console.log('generate result:', result?.data);
+      const websiteId = result?.data?.websiteId || result?.data?.website?._id;
+      if (!websiteId) {
+        setLoading(false);
+        setError(result?.data?.message || 'Unexpected server response');
+        return;
+      }
+      setProgress(100);
+      setLoading(false);
+      navigate(`/editor/${websiteId}`);
     }catch (error) {
       console.error("Failed to generate website", error);
+      setLoading(false);
+      // Prefer server-provided message when available
+      const serverMessage = error?.response?.data?.message;
+      if (error?.response?.status === 401) {
+        setError(serverMessage || 'Unauthorized. Please sign in.');
+        // optionally redirect to login
+        // navigate('/login');
+        return;
+      }
+      if (error?.response?.status === 403) {
+        setError(serverMessage || 'Forbidden. You may not have enough credits.');
+        return;
+      }
+      setError(serverMessage || error.message || "Failed to generate website. Please try again.");
     }
   }
+
+  useEffect(()=>{
+    if(!loading){
+      setProgress(0);
+      setPhaseIndex(0);
+      setError("");
+      return;
+    }
+
+    let value = 0;
+    let phase = 0;
+    const interval = setInterval(()=>{
+      const increment = value <20
+                 ? Math.random() *1.5 
+                 : value <60
+                 ? Math.random() *0.5
+                 : Math.random() *0.2;
+      value = Math.min(value + increment, 100);
+      setProgress(value);
+
+      phase = Math.min(Math.floor(value / (100/PHASES.length)), PHASES.length -1);
+      setPhaseIndex(phase);
+  
+    },1200);
+    return () => clearInterval(interval);
+  }
+   ,[loading] )
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0b0b0b] to-[#1a1a1a] text-white">
       <div className="sticky top-0 z-40 backdrop-blur-xl bg-black/50 border-b border-white/10">
@@ -71,17 +136,51 @@ function Generate() {
           </div>
         </div>
 
+        {error && (
+          <div className="mt-6 text-red-400 text-center text-sm">{error}</div>
+         )}
+
         <div className="flex justify-center">
             <motion.button
                 whileHover={{scale:1.05}}
                 whileTap={{scale:0.95}}
-                className='px-14 py-4 rounded-xl font-semibold text-lg bg-white text-black '
-                onClick={handleGenerateWebsite}
+       
+              onClick={handleGenerateWebsite}
+              disabled={!prompt.trim() || loading}
+              className={`px-14 py-4 rounded-2xl font-semibold text-lg ${prompt.trim() && !loading ? 'bg-white text-black' : 'bg-white/20 text-zinc-400 cursor-not-allowed'}`}
+
             >
                 Generate Website
             </motion.button>
             
         </div>
+
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-xl mx-auto mt-12"
+          >
+            <div className="flex justify-between mb-2 text-xs text-zinc-400">
+              <span>{PHASES[phaseIndex]}</span>
+              <span>{progress}%</span>
+            </div>
+
+            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-linear-to-r from-blue-500 to-purple-500"
+                animate={{ width: `${progress}%` }}
+                transition={{ease: "easeOut", duration: 0.8}}
+              ></div>
+            </div>
+
+            <div className="text-center text-xs text-zinc-400 mt-4">
+              Estimated time remaining:{" "}
+              {Math.max(((100 - progress) / 100) * 60, 5).toFixed(0)} seconds
+            </div>
+          </motion.div>
+
+          )}
       </div>
     </div>
   );
