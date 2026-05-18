@@ -131,6 +131,17 @@ function WebsiteEditor() {
     }
   }
 
+  const handleDeploy=async ()=>{
+    try{
+         const result = await axios.get(`${serverUrl}/api/website/deploy/${website._id}`,
+            {withCredentials:true})
+            window.open(`${result.data.url}`,"_blank")
+           console.log("DEPLOY URL:", result.data.url)
+    }catch(error){
+       console.log(error)
+    }
+  }
+
   useEffect(() => {
     const i = setInterval(() => {
       setThinkingIndex((i)=>(i+1)%thinkingSteps.length)
@@ -222,7 +233,15 @@ function WebsiteEditor() {
          <span className='text-xs text-zinc-400'> Live Preview</span>
 
          <div className='flex gap-2'>
-            <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg bg-linear-to-r from-indigo-500 to-purple-500 text-sm text-white hover:scale-105 transition'><Rocket size={14} />Deploy</button>
+
+          {website.deployed ? "" :
+            <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg bg-linear-to-r from-indigo-500 to-purple-500 text-sm
+             text-white hover:scale-105 transition'
+             onClick={handleDeploy}><Rocket size={14} />Deploy</button>
+          }
+            <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg bg-linear-to-r from-indigo-500 to-purple-500 text-sm
+             text-white hover:scale-105 transition'
+             onClick={handleDeploy}><Rocket size={14} />Deploy</button>
 
             <button className='p-2 lg:hidden' onClick={() => setShowMessages(!showMessages)}>
               <MessageSquare size={18} />
@@ -237,7 +256,7 @@ function WebsiteEditor() {
       </div>
 
       <AnimatePresence>
-        {          showMessages && (
+        {showMessages && (
             <motion.div
               initial={{y: "100%"}}
 
@@ -320,7 +339,8 @@ function WebsiteEditor() {
             <motion.div
               className='fixed inset-0 z-[9999] bg-black'
             >
-              <iframe className='w-full h-full bg-white' srcDoc={website.latestCode}/>
+              <iframe className='w-full h-full bg-white' srcDoc={website.latestCode}
+              sandbox='allow-scripts allow-same-origin allow-forms'/>
               <button onClick={() => setShowFullPreview(false)} className='absolute top-4 right-4
               p-2 bg-black/70 rounded-lg' ><X/></button>
             </motion.div>

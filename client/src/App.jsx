@@ -8,6 +8,7 @@ export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:50
 import Dashboard from './Pages/Dashboard';
 import Generate from './Pages/Generate';
 import WebsiteEditor from './Pages/Editor';
+import LiveSite from './Pages/LiveSite';
 
 const App = () => {
   useGetCurrentUser();
@@ -20,6 +21,7 @@ const App = () => {
         <Route path='/dashboard' element={userData ? <Dashboard /> : <Home />} />
         <Route path='/generate' element={userData ? <Generate /> : <Home />} />
         <Route path='/editor/:id' element={userData ? <WebsiteEditor /> : <Home />} />
+        <Route path='/site/:id' element={<LiveSite/>}/>
       </Routes>
 </BrowserRouter>  )
 }

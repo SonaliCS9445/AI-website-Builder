@@ -1,15 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft,Rocket } from 'lucide-react'
+import { ArrowLeft,Check,Rocket, Share, Share2 } from 'lucide-react'
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { serverUrl } from '../App';
+import axios from 'axios';
+
 function Dashboard() {
   const {userData} = useSelector((state) => state.user);
   const navigate = useNavigate();
     const [websites, setWebsites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copiedId,setCopiedId] = useState(null);
+
+
+  const handleDeploy=async (id)=>{
+    try{
+         const result = await axios.get(`${serverUrl}/api/website/deploy/${id}`,
+            {withCredentials:true})
+            window.open(`${result.data.url}`,"_blank")
+           console.log("DEPLOY URL:", result.data.url)
+    }catch(error){
+       console.log(error)
+    }
+  }
   
   useEffect(()=>{
     const handleGetAllWebsites = async () => {
@@ -40,6 +55,12 @@ function Dashboard() {
     }
     handleGetAllWebsites();
 },[]);
+
+ const handleCopy=async (site) => {
+    await navigator.clipboard.writeText(site.deployUrl)
+    setCopiedId(site._id)
+    setTimeout(()=>setCopiedId(null),2000)
+ }
   return (
 
     <div className='min-h-screen bg-[#050505] text-white'>
@@ -81,13 +102,16 @@ function Dashboard() {
 
             {!loading && !error && (
                 <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {websites.map((website, i) => (
-                    <motion.div
+                {websites.map((website, i) => {
+
+                 const copied=copiedId===website._id
+                  return  <motion.div
                         key={i}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{delay: i*0.05}}
                         whileHover={{y: -6}}
+                        onClick={()=>navigate(`/editor/${website._id}`)}
                         className='rounded-2xl bg-white/5 border border-white/10
                         overflow-hidden hover:bg-white/10 transition flex flex-col cursor-pointer'
                     >
@@ -104,17 +128,40 @@ function Dashboard() {
                         {!website.deployed ?(
                             <button className='mt-auto flex items-center justify-center gap-2
                             px-4 py-2 rounded-xl texxt-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500
-                            hover:scale-105 transition'>
+                            hover:scale-105 transition'
+                            onClick={()=>handleDeploy(website._id)}>
                                 <Rocket size={18}/>Deploy</button>
-                        ):(<button className='mt-auto flex items-center justify-center gap-2
-                            px-4 py-2 rounded-xl texxt-sm font-semibold bg-gradient-to-r from-green-500 to-teal-500
-                            hover:scale-105 transition'>
-                                <Share size={18}/>Share</button>)}
+                        ):(<motion.button
+                            whileTap={{scale: 0.95}}
+                            onClick={()=>handleCopy(website)} 
+                            className={`mt-auto flex items-center justify-center gap-2
+                            px-4 py-2 rounded-xl texxt-sm font-semibold
+                            transition-all
+                            ${
+                                copied ? 
+                                "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                :"bg-white/10 hover:bg-white/20 border border-white/10"
+                            }
+                         `} >
+                                {
+                                    copied ? (
+                                        <>
+                                        <Check size={14}/>
+                                        </>
+
+                                    ) :
+                                    <>
+                                    <Share2 size={14}/>
+                                    Share Link
+                                    </>
+                                }
+                                
+                                </motion.button>)}
 
                          
                        </div>
                     </motion.div>
-                ))}
+})}
                 </div>
             )}
 

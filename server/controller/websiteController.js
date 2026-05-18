@@ -3,7 +3,6 @@ import Website from "../models/website_model.js";
 import { generateResponse } from "../config/openRouter.js";
 import User from "../models/user_model.js";
 
-
 const masterPrompt = `
 you are a senior principal frontend architect
 and a senior ui/ux engineer with 20 years of experience in building websites and web applications.
@@ -161,101 +160,114 @@ export const generateWebsite = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if(user.credits<50){
-        return res.status(403).json({ message: "Not enough credits. Each website generation costs 50 credits." });
+    if (user.credits < 50) {
+      return res.status(403).json({
+        message:
+          "Not enough credits. Each website generation costs 50 credits.",
+      });
     }
     const finalprompt = masterPrompt.replace("{USER_PROMPT}", prompt);
-    let raw="";
-    let parsed=null
-    for(let i=0;i<2 && !parsed;i++){
-        raw = await generateResponse(finalprompt);
-        parsed=extractJson(raw);
+    let raw = "";
+    let parsed = null;
+    for (let i = 0; i < 2 && !parsed; i++) {
+      raw = await generateResponse(finalprompt);
+      parsed = extractJson(raw);
 
-        if(!parsed){
-        raw=await generateResponse(finalprompt + "\n\nRETURN ONLY RAW JSON");
-        parsed=await extractJson(raw);
-        if(!parsed){
-          console.error('generateWebsite: failed to parse AI response. Raw response:', raw);
+      if (!parsed) {
+        raw = await generateResponse(finalprompt + "\n\nRETURN ONLY RAW JSON");
+        parsed = await extractJson(raw);
+        if (!parsed) {
+          console.error(
+            "generateWebsite: failed to parse AI response. Raw response:",
+            raw,
+          );
         }
-        }
+      }
     }
 
-    if(!parsed.code){
-        console.log("ai return invalid response")
-        return res.status(400).json({ message: "AI returned invalid response" });
+    if (!parsed.code) {
+      console.log("ai return invalid response");
+      return res.status(400).json({ message: "AI returned invalid response" });
     }
 
     const website = await Website.create({
       userId: user._id,
-      title: prompt.substring(0,50),
+      title: prompt.substring(0, 50),
       latestCode: parsed.code,
-      conversation:[
-         {
-          role:"user",
-          content:prompt
+      conversation: [
+        {
+          role: "user",
+          content: prompt,
         },
         {
-          role:"ai",
-          content:parsed.message
-        }
-       
-      ]
+          role: "ai",
+          content: parsed.message,
+        },
+      ],
     });
 
-    user.credits-=50;
+    user.credits -= 50;
     await user.save();
 
-    return res.status(200).json({ message: "Website generated successfully", websiteId: website._id,
-        remainingCredits: user.credits
+    return res.status(200).json({
+      message: "Website generated successfully",
+      websiteId: website._id,
+      remainingCredits: user.credits,
     });
-
   } catch (error) {
-    console.error('generateWebsite error:', error);
-    return res.status(500).json({ message:`generateWebsite error: ${error.message}` });
+    console.error("generateWebsite error:", error);
+    return res
+      .status(500)
+      .json({ message: `generateWebsite error: ${error.message}` });
   }
 };
 
-export const getWebsiteById = async(req,res)=>{
-    try {
-    const rawId = req.params.id || '';
-    const id = rawId.replace(/^:/, ''); // handle accidental leading ':' from client
-    const website=await Website.findOne({_id:id, userId:req.user._id});
-        if(!website){
-            return res.status(404).json({message:"Website not found"});
-        }
-
-        return res.status(200).json({website});
-    } catch (error) {
-        console.error('getWebsiteById error:', error);
-        return res.status(500).json({ message:`getWebsiteById error: ${error.message}` });
+export const getWebsiteById = async (req, res) => {
+  try {
+    const rawId = req.params.id || "";
+    const id = rawId.replace(/^:/, ""); // handle accidental leading ':' from client
+    const website = await Website.findOne({ _id: id, userId: req.user._id });
+    if (!website) {
+      return res.status(404).json({ message: "Website not found" });
     }
-}
 
-export const changes=async (req,res)=>{
-    try{
-        const {prompt}=req.body;
-        if(!prompt){
-            return res.status(400).json({message:"Prompt is required"});
-        }
-        if(!req.params.id) return res.status(400).json({message: 'Website id is required'});
-        const rawId = req.params.id || '';
-        const id = rawId.replace(/^:/, '');
-        console.log('changes called for website id:', id, 'user:', req.user?._id);
-        const website=await Website.findOne({_id:id, userId:req.user._id});
+    return res.status(200).json({ website });
+  } catch (error) {
+    console.error("getWebsiteById error:", error);
+    return res
+      .status(500)
+      .json({ message: `getWebsiteById error: ${error.message}` });
+  }
+};
 
-        if(!website){
-            return res.status(404).json({message:"Website not found"});
-        }
+export const changes = async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ message: "Prompt is required" });
+    }
+    if (!req.params.id)
+      return res.status(400).json({ message: "Website id is required" });
+    const rawId = req.params.id || "";
+    const id = rawId.replace(/^:/, "");
+    console.log("changes called for website id:", id, "user:", req.user?._id);
+    const website = await Website.findOne({ _id: id, userId: req.user._id });
 
-        const user=await User.findById(req.user._id);
-        if(!user){
-            return res.status(401).json({message:"Unauthorized"});
-        }
-        if(user.credits<10){
-            return res.status(403).json({message:"Not enough credits. Each change costs 10 credits."});
-        }
+    if (!website) {
+      return res.status(404).json({ message: "Website not found" });
+    }
 
-        const updatePrompt=`
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (user.credits < 10) {
+      return res
+        .status(403)
+        .json({ message: "Not enough credits. Each change costs 10 credits." });
+    }
+
+    const updatePrompt = `
         UPDATE THIS HTML WEBSITE.
         CURRENT CODE:
         ${website.latestCode}
@@ -267,60 +279,120 @@ export const changes=async (req,res)=>{
         {
         "message":"short professional confirmation sentence",
         "code":"<UPDATED FULL VALID HTML DOCUMENT>"
-        }`
+        }`;
 
-        let raw="";
-    let parsed=null
-        console.log('sending prompt to OpenRouter, prompt length:', updatePrompt.length);
-    for(let i=0;i<2 && !parsed;i++){
-        raw = await generateResponse(updatePrompt);
-            console.log('raw response length:', raw ? String(raw).length : 0);
-        parsed=extractJson(raw);
+    let raw = "";
+    let parsed = null;
+    console.log(
+      "sending prompt to OpenRouter, prompt length:",
+      updatePrompt.length,
+    );
+    for (let i = 0; i < 2 && !parsed; i++) {
+      raw = await generateResponse(updatePrompt);
+      console.log("raw response length:", raw ? String(raw).length : 0);
+      parsed = extractJson(raw);
 
-        if(!parsed){
-        raw=await generateResponse(updatePrompt + "\n\nRETURN ONLY RAW JSON");
-        parsed=await extractJson(raw);
-        if(!parsed){
-           raw=await generateResponse(updatePrompt + "\n\nRETURN ONLY RAW JSON. ENSURE THE RESPONSE IS IN THE EXACT FORMAT AND CONTAINS ONLY JSON");
-           parsed=await extractJson(raw);
+      if (!parsed) {
+        raw = await generateResponse(updatePrompt + "\n\nRETURN ONLY RAW JSON");
+        parsed = await extractJson(raw);
+        if (!parsed) {
+          raw = await generateResponse(
+            updatePrompt +
+              "\n\nRETURN ONLY RAW JSON. ENSURE THE RESPONSE IS IN THE EXACT FORMAT AND CONTAINS ONLY JSON",
+          );
+          parsed = await extractJson(raw);
         }
-        }
+      }
     }
 
-    if(!parsed.code){
-        console.log("ai return invalid response")
-        return res.status(400).json({ message: "AI returned invalid response" });
+    if (!parsed.code) {
+      console.log("ai return invalid response");
+      return res.status(400).json({ message: "AI returned invalid response" });
     }
 
-        website.conversation.push(
-            {role:"user", content:prompt},
-            {role:"ai", content:parsed.message},   
-        );
+    website.conversation.push(
+      { role: "user", content: prompt },
+      { role: "ai", content: parsed.message },
+    );
 
-        website.latestCode=parsed.code;
-        await website.save();
-        // charge 10 credits per change
-         user.credits-=10;
-        await user.save();
+    website.latestCode = parsed.code;
+    await website.save();
+    // charge 10 credits per change
+    user.credits -= 10;
+    await user.save();
 
-    return res.status(200).json({ 
-        message: parsed.message,
-        code: parsed.code,
-         websiteId: website._id,
-        remainingCredits: user.credits
+    return res.status(200).json({
+      message: parsed.message,
+      code: parsed.code,
+      websiteId: website._id,
+      remainingCredits: user.credits,
     });
-    } catch (error) {
-        console.error('changes error:', error);
-        return res.status(500).json({ message:`changes error: ${error.message}` });
-    }
-}
+  } catch (error) {
+    console.error("changes error:", error);
+    return res.status(500).json({ message: `changes error: ${error.message}` });
+  }
+};
 
-export const getAll=async(req,res)=>{
-    try {
-        const websites=await Website.find({userId:req.user._id})
-        return res.status(200).json({websites});
-    } catch (error) {
-        console.error('getAll error:', error);
-        return res.status(500).json({ message:`getAll error: ${error.message}` });
+export const getAll = async (req, res) => {
+  try {
+    const websites = await Website.find({ userId: req.user._id });
+    return res.status(200).json({ websites });
+  } catch (error) {
+    console.error("getAll error:", error);
+    return res.status(500).json({ message: `getAll error: ${error.message}` });
+  }
+};
+
+export const deploy = async (req, res) => {
+  try {
+    const website = await Website.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+
+    if (!website) {
+      return res.status(400).json({ message: "website not found" });
     }
-}
+
+    if (!website.slug) {
+      const safeTitle = website.title || "site";
+      website.slug =
+        safeTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+          .slice(0, 60) + website._id.toString().slice(-5);
+    }
+
+    website.deployed = true;
+    // Build a safe client base URL. Prefer CLIENT_URI, then CLIENT_URL, otherwise derive from the request.
+    const rawClient = process.env.CLIENT_URI || process.env.CLIENT_URL;
+
+    const clientBase =
+      rawClient && rawClient !== "undefined" && rawClient.trim() !== ""
+        ? rawClient
+        : "http://localhost:5173";
+
+    website.deployUrl = `${clientBase.replace(/\/$/, "")}/site/${website.slug}`;
+    await website.save();
+
+    return res.status(200).json({
+      url: website.deployUrl,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: `deploy website error ${error}` });
+  }
+};
+export const getBySlug = async (req, res) => {
+  try {
+    const website = await Website.findOne({
+      slug: req.params.slug,
+    });
+
+    if (!website) {
+      return res.status(400).json({ message: "website not found" });
+    }
+    return res.status(200).json(website);
+  } catch (error) {
+    return res.status(500).json({ message: `get by slug ${error}` });
+  }
+};
