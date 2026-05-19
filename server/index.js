@@ -25,7 +25,7 @@ const app = express();
 app.post("/api/stripe/webhook", express.json({ type: "application/json" }),
   stripeWebhook)
 app.use(cookieParser());
-const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5174", "http://localhost:5175"];
+const allowedOrigins = [process.env.CLIENT_URL || "https://ai-website-builder-2-yg8d.onrender.com"];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -51,4 +51,4 @@ app.use("/api/billing", billingRouter)
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
-});
+});
