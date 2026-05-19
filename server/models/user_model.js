@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     plan:{
         type:String,
-        enum:["free","pro","enterprise"],
+        enum:["free", "basic", "pro", "enterprise"],
         default:"free"  
     }
 },{timestamps:true});

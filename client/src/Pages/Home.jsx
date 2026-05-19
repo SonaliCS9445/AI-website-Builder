@@ -181,7 +181,7 @@ const Home = () => {
         <button
           className="px-10 py-4 rounded-xl bg-white
             text-black font-semibold hover:scale-105 transition mt-12"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => userData ? navigate('/dashboard') : setOpenLogin(true)}
         >{userData ? "Go to Dashboard" : "Get Started"}
         </button>
       </section>
