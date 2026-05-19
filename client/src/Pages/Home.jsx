@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState }  from "react";
 import { AnimatePresence, motion } from "motion/react";
 import LoginModal from "../components/LoginModal";
 import { useSelector, useDispatch } from "react-redux";
@@ -15,9 +15,11 @@ const Home = () => {
     "Production ready output",
   ];
 
-  const [openLogin, setOpenLogin] = React.useState(false);
+  const [openLogin, setOpenLogin] = useState(false);
   const { userData } = useSelector((state) => state.user);
-  const [openProfile, setOpenProfile] = React.useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
+  const [websites, setWebsites] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleLogout =async () => {
@@ -31,6 +33,25 @@ const Home = () => {
 
     }
   }
+
+    useEffect(()=>{
+      if(!userData) return;
+      const   handleGetAllWebsites = async () => { 
+        try {
+                  const response = await axios.get(`${serverUrl}/api/website/get-all`, { withCredentials: true });
+                
+                  setWebsites((response.data && response.data.websites) || []);
+                 
+                  console.log("Response from server:", response.data);
+        }
+        catch(error){
+                  console.error("Error fetching websites:", error);
+              
+                  setError(error?.message || "An error occurred while fetching websites.");
+        }
+      }
+      handleGetAllWebsites();
+  },[userData]);
   return (
     <div className="relative min-h-screen bg-[#040404] text-white overflow-hidden">
       <motion.div
@@ -50,6 +71,7 @@ const Home = () => {
             <div
               className="hidden md:inline text-sm text-zinc-400
                   hover:text-white cursor-pointer"
+                  onClick={()=>navigate("/pricing")}
             >
               Pricing
             </div>
@@ -58,7 +80,7 @@ const Home = () => {
               <div
                 className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full
                 bg-white/5 border border-white/10 text-sm cursor-pointer hover:bg-white/10
-                transition"
+                transition"  onClick={()=>navigate("/pricing")}
               >
                 <Coins size={14} className="text-yellow-400" />
                 <span>{userData.credits || 0}</span>
@@ -164,7 +186,38 @@ const Home = () => {
         </button>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 pb-32">
+      {userData && websites?.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-32">
+          <h3 className="text-2xl font-semibold mb-6">Your Websites</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {websites.slice(0,3).map((w,i)=>(
+              <motion.div
+              key={w._id}
+              whileHover={{y: -6}}
+              onClick={()=>navigate(`/editor/${w._id}`)}
+              className="cursor-pointer rounded-2xl bg-white/5 border
+              border-white/10 overflow-hidden">
+           <div className='h-40 bg-black'>
+            <iframe
+            srcDoc={w.latestCode}
+              className='w-[140%] h-[140%] scale-[0.72] origin-top-left pointer-events-none bg-white'
+            
+            />
+
+           </div>
+
+            <h3 className='p-4 text-base font-semibold line-clamp-2'>{w.title}</h3>
+                        <p className='p-4 text-xs text-zinc-400'>Last updated: {new Date(w.updatedAt).toLocaleDateString()}</p>
+              </motion.div>
+              
+            ))  }
+
+          </div>
+
+        </section>
+      )   }
+
+            <section className="max-w-7xl mx-auto px-6 pb-32">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {highlights.map((h, i) => (
             <motion.div
@@ -183,6 +236,8 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+
 
       <footer className="border-t border-white/10 py-10 text-center text-sm text-zinc-400">
         &copy; {new Date().getFullYear()} GenWeb.ai. All rights reserved.

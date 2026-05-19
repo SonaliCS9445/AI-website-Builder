@@ -14,13 +14,18 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import userRouter from './routes/useRoutes.js';
 import websiteRouter from './routes/websiteRoutes.js';
+import billingRouter from "./routes/billingRoutes.js";
+import { stripeWebhook } from "./controller/stripeWebhookController.js";
 
 
 
 
 const app = express();
+
+app.post("/api/stripe/webhook", express.json({ type: "application/json" }),
+  stripeWebhook)
 app.use(cookieParser());
-const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5174", "http://localhost:5173"];
+const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5174", "http://localhost:5175"];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -39,10 +44,11 @@ app.use(express.json());
 
 
 
-app.use("/api/auth",authRouter);
-app.use("/api/user",userRouter);
-app.use("/api/website",websiteRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
+app.use("/api/website", websiteRouter);
+app.use("/api/billing", billingRouter)
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
-});
+});

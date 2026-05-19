@@ -21,6 +21,7 @@ function Dashboard() {
             {withCredentials:true})
             window.open(`${result.data.url}`,"_blank")
            console.log("DEPLOY URL:", result.data.url)
+           setWebsites(prev => prev.map(w => w._id === id ? { ...w, deployed: true, deployUrl: result.data.url } : w));
     }catch(error){
        console.log(error)
     }
@@ -127,15 +128,15 @@ function Dashboard() {
 
                         {!website.deployed ?(
                             <button className='mt-auto flex items-center justify-center gap-2
-                            px-4 py-2 rounded-xl texxt-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500
+                            px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500
                             hover:scale-105 transition'
-                            onClick={()=>handleDeploy(website._id)}>
+                            onClick={(e)=>{ e.stopPropagation(); handleDeploy(website._id); }}>
                                 <Rocket size={18}/>Deploy</button>
                         ):(<motion.button
                             whileTap={{scale: 0.95}}
-                            onClick={()=>handleCopy(website)} 
+                            onClick={(e)=>{ e.stopPropagation(); handleCopy(website); }} 
                             className={`mt-auto flex items-center justify-center gap-2
-                            px-4 py-2 rounded-xl texxt-sm font-semibold
+                            px-4 py-2 rounded-xl text-sm font-semibold
                             transition-all
                             ${
                                 copied ? 
@@ -147,6 +148,7 @@ function Dashboard() {
                                     copied ? (
                                         <>
                                         <Check size={14}/>
+                                        Copied!
                                         </>
 
                                     ) :

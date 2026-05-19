@@ -9,6 +9,7 @@ import Dashboard from './Pages/Dashboard';
 import Generate from './Pages/Generate';
 import WebsiteEditor from './Pages/Editor';
 import LiveSite from './Pages/LiveSite';
+import Pricing from './Pages/Pricing';
 
 const App = () => {
   useGetCurrentUser();
@@ -22,6 +23,7 @@ const App = () => {
         <Route path='/generate' element={userData ? <Generate /> : <Home />} />
         <Route path='/editor/:id' element={userData ? <WebsiteEditor /> : <Home />} />
         <Route path='/site/:id' element={<LiveSite/>}/>
+        <Route path='/pricing' element={<Pricing/>}/>
       </Routes>
 </BrowserRouter>  )
 }
