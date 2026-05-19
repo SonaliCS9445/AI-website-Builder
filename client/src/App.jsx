@@ -4,7 +4,7 @@ import Home from './Pages/Home'
 import { use } from 'react';
 import useGetCurrentUser from './hooks/useGetCurrentUser';
 import { useSelector } from 'react-redux';
-export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+export const serverUrl = "https://ai-website-builder-rad4.onrender.com"
 import Dashboard from './Pages/Dashboard';
 import Generate from './Pages/Generate';
 import WebsiteEditor from './Pages/Editor';
