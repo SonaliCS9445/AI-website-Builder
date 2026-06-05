@@ -1,8 +1,5 @@
 # WebsiteBuilder — Architecture & Data Flow Diagrams
 
-## Purpose
-This document provides a full architecture overview and exact data flow diagrams (DFD levels 0–2) for the WebsiteBuilder project. It complements `docs/low_level_design.md` by visualizing components, data stores, and detailed information flows.
-
 ---
 
 ## 1. Architecture Overview
