@@ -258,4 +258,52 @@ Billing (optional collection)
 
 
 
+## 10.10 End-to-End Flow Diagram (Mermaid)
 
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant C as React SPA (Client)
+  participant S as API Server (Express)
+  participant DB as MongoDB
+  participant AS as Asset Store (S3/CDN)
+  participant W as Worker
+  participant G as Generator Service
+  participant CDN as CDN/Public Site
+
+  U->>C: Visit site & register/login
+  C->>S: POST /api/auth/register or login
+  S->>DB: Create / validate user
+  S-->>C: վերադարձ JWT
+
+  U->>C: Create new website
+  C->>S: POST /api/website
+  S->>DB: Store website content
+  S-->>C: Return websiteId
+
+  U->>C: Edit content
+  C->>S: PUT /api/website/:id (autosave)
+  S->>DB: Update content
+
+  U->>C: Upload assets
+  C->>S: POST /api/website/:id/assets
+  S->>AS: Store files
+  AS-->>S: Asset URLs
+  S-->>C: Return asset refs
+
+  U->>C: Click Publish
+  C->>S: POST /api/website/:id/publish
+  S->>DB: Set status = publishing
+  S->>W: Enqueue job
+
+  W->>G: Start generation
+  G->>DB: Fetch content
+  G->>AS: Upload generated assets
+  G->>DB: Save generatedHtml + published=true
+
+  G-->>W: Done
+  W-->>S: Job complete
+  S-->>C: Return public URL
+
+  U->>CDN: Visit live site
+  CDN-->>U: Serve static website
