@@ -256,13 +256,6 @@ Billing (optional collection)
 - Escaping/sanitization in generator to avoid XSS in generated HTML.
 - Use TLS for all client-server and server-external calls.
 
----
 
-## 9. Next steps and exports
-- Option: render the Mermaid diagrams to PNG/SVG for documentation use.
-- Option: generate an OpenAPI spec that maps the APIs described above.
-- Option: implement Mongoose schema files for `User` and `Website`.
-
----
 
 
