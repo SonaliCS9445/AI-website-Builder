@@ -30,7 +30,7 @@ flowchart LR
     C[React SPA]
   end
 
-  subgraph Server[API Server (Express)]
+  subgraph Server[API Server - Express]
     A[Auth Service]
     W[Website Service]
     G[Generator Service]
@@ -265,4 +265,4 @@ Billing (optional collection)
 
 ---
 
-Document created. If you want, I can render and save the Mermaid diagrams as images, or produce an OpenAPI spec next.
+
